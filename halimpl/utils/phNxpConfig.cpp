@@ -75,6 +75,7 @@ const char* transport_config_paths[] = {"res/"};
 const int transport_config_path_size =
     (sizeof(transport_config_paths) / sizeof(transport_config_paths[0]));
 #define config_name "libnfc-nxp.conf"
+#define config_name_hh6 "libnfc-nxp-hh6.conf"
 #if (NXP_EXTNS == TRUE)
 #define extra_config_base "libnfc-"
 #else
@@ -837,21 +838,32 @@ CNfcConfig& CNfcConfig::GetInstance() {
   static CNfcConfig theInstance;
   int gconfigpathid=0;
   char config_name_generic[MAX_DATA_CONFIG_PATH_LEN] = {'\0'};
-
+  char value[PROPERTY_VALUE_MAX];
+  __system_property_get("ro.boot.device", value);
     if (theInstance.size() == 0 && theInstance.mValidFile)
     {
         string strPath;
         if (alternative_config_path[0] != '\0')
         {
             strPath.assign(alternative_config_path);
-            strPath += config_name;
+     if (!strcmp(value, "HH6"))
+     { strPath += config_name_hh6;
+ALOGI("Using HH6 nxp conf  %s", strPath.c_str()); }
+         else { strPath += config_name;
+         ALOGI("nXp1 = %s, path not changed default SAT", strPath.c_str());
+  }
             theInstance.readConfig(strPath.c_str(), true);
             if (!theInstance.empty())
             {
                 return theInstance;
             }
         }
-        findConfigFilePathFromTransportConfigPaths(config_name, strPath);
+      
+      if (!strcmp(value, "HH6")) {findConfigFilePathFromTransportConfigPaths(config_name_hh6, strPath);
+   ALOGI("Using HH6 nxp conf  %s", strPath.c_str()); }
+   else  {findConfigFilePathFromTransportConfigPaths(config_name, strPath);
+    ALOGI("using default conf SAT %s ", strPath.c_str()); }
+     
         //checks whether the default config file is present in th target
         if (theInstance.file_exist(strPath.c_str())) {
             ALOGI("default config file exists = %s, disables dynamic selection", strPath.c_str());
